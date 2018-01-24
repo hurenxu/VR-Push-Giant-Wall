@@ -72,11 +72,11 @@ public class brickwall : MonoBehaviour {
                 duration += Time.deltaTime;
                 if (duration > 2.0f)
                 {
-                    if (hitObject.name == "Brick")
+                    if (hitObject.name == "Brick(Clone)")
                     {
                         Vector3 forward = transform.TransformDirection(Vector3.forward);
-                        GameObject newball = Instantiate(ball, transform.position, Quaternion.identity).gameObject;
-                        newball.GetComponent<Rigidbody>().velocity = 10.0f * forward;
+                        GameObject newball = Instantiate(ball, Camera.GetComponent<Transform>().localPosition, Quaternion.identity).gameObject;
+                        newball.GetComponent<Rigidbody>().velocity = 30.0f * forward;
                     }
                     else if (hitObject.name == "ground")
                     {
