@@ -46,7 +46,7 @@ public class brickwall : MonoBehaviour {
                     Vector3 newRotation = new Vector3(
                         0.0f, -((angle + angleOffset) * 180.0f / (float)Mathf.PI), 0.0f);
                     Quaternion startRotation = Quaternion.Euler(newRotation);
-                    Transform transform = Instantiate(Brick, pos, startRotation).transform;
+                    Transform transform = Instantiate(Brick, pos, startRotation).transform;                    
                     transform.transform.parent = tower;
                 }
             }
@@ -75,7 +75,7 @@ public class brickwall : MonoBehaviour {
                     if (hitObject.name == "Brick(Clone)")
                     {
                         Vector3 forward = transform.TransformDirection(Vector3.forward);
-                        GameObject newball = Instantiate(ball, Camera.GetComponent<Transform>().localPosition, Quaternion.identity).gameObject;
+                        GameObject newball = Instantiate(ball, Camera.GetComponent<Transform>().localPosition, Camera.GetComponent<Transform>().rotation).gameObject;
                         newball.GetComponent<Rigidbody>().velocity = 30.0f * forward;
                     }
                     else if (hitObject.name == "ground")
