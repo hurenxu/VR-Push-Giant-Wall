@@ -21,8 +21,7 @@ public class CircleBar : MonoBehaviour {
     void Change(float value)
     {
         Bar.fillAmount = value / 360;
-        Button.localEulerAngles = new Vector3(0.0f, 0.0f, 
-            -value);
+        Button.localEulerAngles = new Vector3(0.0f, 0.0f, -value);
     }
 
 }

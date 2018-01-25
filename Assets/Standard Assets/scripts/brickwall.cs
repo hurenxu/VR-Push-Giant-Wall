@@ -5,10 +5,10 @@ using System;
 
 public class brickwall : MonoBehaviour {
 
-    public GameObject Brick;
+    public Rigidbody Brick;
     public GameObject Camera;
     Transform tower;
-    GameObject previousObj;
+    Rigidbody LookingObj;
     public float radius = 2.0f;
     public float angleRad = 2.0f * (float)Mathf.PI / 180.0f;
     public float angleDeg = 2.0f;
@@ -17,15 +17,29 @@ public class brickwall : MonoBehaviour {
     float duration;
     bool rebuild;
     public GameObject ball;
+    LoadingBar Bar;
 
     // Use this for initialization
     void Start () {
         rebuild = true;
         Camera.transform.position = new Vector3(0.0f, 1.0f, 0.0f);
+        Bar = GetComponent<LoadingBar>();
+        Bar.OnReachMaximum += Bar_OnReachMaximum;
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    private void Bar_OnReachMaximum(object sender, EventArgs e)
+    {
+        if (LookingObj != null)
+        {
+            if (LookingObj.name == "Brick(Clone)")
+            {
+                LookingObj.AddForce(9000 * Camera.transform.forward, ForceMode.Force);
+            }
+        }
+    }
+
+    // Update is called once per frame
+    void Update () {
         if (rebuild == true) {
             float angleIncrement = 2 * Mathf.PI / numOfBlocks;
             // creating the brick wall
@@ -44,7 +58,7 @@ public class brickwall : MonoBehaviour {
                     float posZ = radius * Mathf.Sin(angle + angleOffset);
                     Vector3 pos = new Vector3(posX, posY, posZ);
                     Vector3 newRotation = new Vector3(
-                        0.0f, -((angle + angleOffset) * 180.0f / (float)Mathf.PI), 0.0f);
+                        0.0f, -((angle + angleOffset) * 180.0f / Mathf.PI), 0.0f);
                     Quaternion startRotation = Quaternion.Euler(newRotation);
                     Transform transform = Instantiate(Brick, pos, startRotation).transform;                    
                     transform.transform.parent = tower;
@@ -59,7 +73,7 @@ public class brickwall : MonoBehaviour {
         RaycastHit hitInfo;
         Vector3 fwd = transform.TransformDirection(Vector3.forward);
 
-        if (Physics.Raycast(transform.position, fwd, out hitInfo, 10))
+        /*if (Physics.Raycast(transform.position, fwd, out hitInfo, 10))
         {
             GameObject hitObject = hitInfo.collider.gameObject;
             if (hitObject != previousObj)
@@ -95,9 +109,23 @@ public class brickwall : MonoBehaviour {
                 }
             }
         }
-        else
+        //else
         {
             duration = 0.0f;
+        }*/
+        if (Physics.Raycast(Camera.transform.position, Camera.transform.forward, out hitInfo, 10))
+        {
+            Rigidbody hitObject = hitInfo.collider.attachedRigidbody;
+            if (hitObject != LookingObj)
+            {
+                LookingObj = hitObject;
+                Bar.Reset(); 
+                //kan dao le shen me                
+            }
+            else
+            {
+                Bar.IncreastTime(Time.deltaTime);
+            }
         }
     }
 
