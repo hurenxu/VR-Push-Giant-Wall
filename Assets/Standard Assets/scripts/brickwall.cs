@@ -5,9 +5,9 @@ using System;
 
 public class brickwall : MonoBehaviour {
 
-    public Rigidbody Brick;
+    public GameObject Brick;
     public GameObject Camera;
-    Transform tower;
+    List<GameObject> tower;
     Rigidbody LookingObj;
     public float radius = 2.0f;
     public float angleRad = 2.0f * (float)Mathf.PI / 180.0f;
@@ -15,16 +15,19 @@ public class brickwall : MonoBehaviour {
     public int height = 20;
     public int numOfBlocks = 20;
     float duration;
-    bool rebuild;
+    bool needRebuild;
     public GameObject ball;
     LoadingBar Bar;
+    bool towerHasBeenTouched, test;
 
     // Use this for initialization
     void Start () {
-        rebuild = true;
         Camera.transform.position = new Vector3(0.0f, 1.0f, 0.0f);
         Bar = GetComponent<LoadingBar>();
         Bar.OnReachMaximum += Bar_OnReachMaximum;
+        tower = new List<GameObject>();
+        RebuildTower();
+        test = true;
     }
 
     private void Bar_OnReachMaximum(object sender, EventArgs e)
@@ -34,37 +37,43 @@ public class brickwall : MonoBehaviour {
             if (LookingObj.name == "Brick(Clone)")
             {
                 LookingObj.AddForce(9000 * Camera.transform.forward, ForceMode.Force);
+                towerHasBeenTouched = true;
             }
         }
     }
 
     // Update is called once per frame
     void Update () {
-        if (rebuild == true) {
-            float angleIncrement = 2 * Mathf.PI / numOfBlocks;
-            // creating the brick wall
-            for (int floor = 0; floor < height; floor++)
+        if (needRebuild)
+        {
+            RebuildTower();
+            needRebuild = false;
+        }
+    }
+
+    private void RebuildTower()
+    {
+        float angleIncrement = 2 * Mathf.PI / numOfBlocks;
+        // creating the brick wall
+        for (int floor = 0; floor < height; floor++)
+        {
+            for (int block = 0; block < numOfBlocks; block++)
             {
-                for (int block = 0; block < numOfBlocks; block++)
+                float angle = block * angleIncrement;
+                float angleOffset = 0.0f;
+                if (floor % 2 != 0)
                 {
-                    float angle = block * angleIncrement;
-                    float angleOffset = 0.0f;
-                    if (floor % 2 != 0)
-                    {
-                        angleOffset = angleIncrement / 2.0f;
-                    }
-                    float posX = radius * Mathf.Cos(angle + angleOffset);
-                    float posY = floor * (Brick.GetComponent<Transform>().localScale.y) + 0.7f;
-                    float posZ = radius * Mathf.Sin(angle + angleOffset);
-                    Vector3 pos = new Vector3(posX, posY, posZ);
-                    Vector3 newRotation = new Vector3(
-                        0.0f, -((angle + angleOffset) * 180.0f / Mathf.PI), 0.0f);
-                    Quaternion startRotation = Quaternion.Euler(newRotation);
-                    Transform transform = Instantiate(Brick, pos, startRotation).transform;                    
-                    transform.transform.parent = tower;
+                    angleOffset = angleIncrement / 2.0f;
                 }
+                float posX = radius * Mathf.Cos(angle + angleOffset);
+                float posY = floor * (Brick.GetComponent<Transform>().localScale.y) + 0.7f;
+                float posZ = radius * Mathf.Sin(angle + angleOffset);
+                Vector3 pos = new Vector3(posX, posY, posZ);
+                Vector3 newRotation = new Vector3(
+                    0.0f, -((angle + angleOffset) * 180.0f / Mathf.PI), 0.0f);
+                Quaternion startRotation = Quaternion.Euler(newRotation);
+                tower.Add(Instantiate(Brick, pos, startRotation));
             }
-            rebuild = false;
         }
     }
 
@@ -119,12 +128,27 @@ public class brickwall : MonoBehaviour {
             if (hitObject != LookingObj)
             {
                 LookingObj = hitObject;
-                Bar.Reset(); 
-                //kan dao le shen me                
+                Bar.Reset();
+                
             }
             else
             {
                 Bar.IncreastTime(Time.deltaTime);
+            }
+        }
+        else
+        {
+            if (Mathf.Abs(Camera.transform.forward.x) < 0.1 && (Mathf.Abs(Camera.transform.forward.z) < 0.1) && towerHasBeenTouched && test)
+            {
+                Bar.Reset();                
+                
+                foreach (var brick in tower)
+                {
+                    Destroy(brick);                    
+                }
+                tower = new List<GameObject>();
+                towerHasBeenTouched = false;
+                needRebuild = true;
             }
         }
     }
