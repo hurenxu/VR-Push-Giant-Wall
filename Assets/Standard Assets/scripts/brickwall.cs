@@ -8,17 +8,18 @@ public class brickwall : MonoBehaviour {
     public GameObject Brick;
     public GameObject Camera;
     List<GameObject> tower;
-    Rigidbody LookingObj;
+    Collider LookingObj;
     public float radius = 2.0f;
     public float angleRad = 2.0f * (float)Mathf.PI / 180.0f;
     public float angleDeg = 2.0f;
     public int height = 20;
     public int numOfBlocks = 20;
-    float duration;
     bool needRebuild;
     public GameObject ball;
     LoadingBar Bar;
     bool towerHasBeenTouched, test;
+    RaycastHit hitInfo;
+    public float Force = 10;
 
     // Use this for initialization
     void Start () {
@@ -36,8 +37,16 @@ public class brickwall : MonoBehaviour {
         {
             if (LookingObj.name == "Brick(Clone)")
             {
-                LookingObj.AddForce(9000 * Camera.transform.forward, ForceMode.Force);
+                LookingObj.attachedRigidbody.AddForce(Force * Mathf.Log(Bar.Duration, 30) * Camera.transform.forward, ForceMode.Acceleration);
+                var particle = LookingObj.GetComponent<ParticleSystem>();
+                particle.Play();
                 towerHasBeenTouched = true;
+            }
+            else if (LookingObj.name == "ground")
+            {
+                Camera.transform.position = new Vector3(hitInfo.point.x, Camera.transform.position.y, hitInfo.point.z);
+                Bar.Reset();
+                Bar.IsLocked = true;
             }
         }
     }
@@ -59,7 +68,7 @@ public class brickwall : MonoBehaviour {
         {
             for (int block = 0; block < numOfBlocks; block++)
             {
-                float angle = block * angleIncrement;
+                float angle = (block + 0.5f) * angleIncrement;
                 float angleOffset = 0.0f;
                 if (floor % 2 != 0)
                 {
@@ -72,14 +81,17 @@ public class brickwall : MonoBehaviour {
                 Vector3 newRotation = new Vector3(
                     0.0f, -((angle + angleOffset) * 180.0f / Mathf.PI), 0.0f);
                 Quaternion startRotation = Quaternion.Euler(newRotation);
-                tower.Add(Instantiate(Brick, pos, startRotation));
+                var brickOBJ = Instantiate(Brick, pos, startRotation);
+                var particle = brickOBJ.GetComponent<ParticleSystem>();
+                particle.Stop();               
+                tower.Add(brickOBJ);
             }
         }
     }
 
     void FixedUpdate()
     {
-        RaycastHit hitInfo;
+        
         Vector3 fwd = transform.TransformDirection(Vector3.forward);
 
         /*if (Physics.Raycast(transform.position, fwd, out hitInfo, 10))
@@ -123,11 +135,16 @@ public class brickwall : MonoBehaviour {
             duration = 0.0f;
         }*/
         if (Physics.Raycast(Camera.transform.position, Camera.transform.forward, out hitInfo, 10))
-        {
-            Rigidbody hitObject = hitInfo.collider.attachedRigidbody;
-            if (hitObject != LookingObj)
+        {            
+            Collider collider = hitInfo.collider;            
+            if (collider != LookingObj)
             {
-                LookingObj = hitObject;
+                if (LookingObj != null)
+                {
+                    var particle = LookingObj.GetComponent<ParticleSystem>();
+                    if (particle != null) { particle.Stop(); }
+                }
+                LookingObj = collider;
                 Bar.Reset();
                 
             }
@@ -138,10 +155,14 @@ public class brickwall : MonoBehaviour {
         }
         else
         {
-            if (Mathf.Abs(Camera.transform.forward.x) < 0.1 && (Mathf.Abs(Camera.transform.forward.z) < 0.1) && towerHasBeenTouched && test)
+            if (LookingObj != null)
             {
-                Bar.Reset();                
-                
+                var particle = LookingObj.GetComponent<ParticleSystem>();
+                if (particle != null) { particle.Stop(); }
+            }
+            Bar.Reset();
+            if (Mathf.Abs(Camera.transform.forward.x) < 0.1 && (Mathf.Abs(Camera.transform.forward.z) < 0.1) && towerHasBeenTouched && test)
+            {                              
                 foreach (var brick in tower)
                 {
                     Destroy(brick);                    
