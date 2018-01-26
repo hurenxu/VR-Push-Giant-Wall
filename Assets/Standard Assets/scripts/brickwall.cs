@@ -7,6 +7,7 @@ public class brickwall : MonoBehaviour {
 
     public GameObject Brick;
     public GameObject Camera;
+    public GameObject camOBJ;
     List<GameObject> tower;
     Collider LookingObj;
     public float radius = 2.0f;
@@ -20,6 +21,7 @@ public class brickwall : MonoBehaviour {
     bool towerHasBeenTouched, test;
     RaycastHit hitInfo;
     public float Force = 10;
+    public Texture brickTex, ballTex;
 
     // Use this for initialization
     void Start () {
@@ -44,7 +46,7 @@ public class brickwall : MonoBehaviour {
             }
             else if (LookingObj.name == "ground")
             {
-                Camera.transform.position = new Vector3(hitInfo.point.x, Camera.transform.position.y, hitInfo.point.z);
+                camOBJ.transform.position = new Vector3(hitInfo.point.x, camOBJ.transform.position.y, hitInfo.point.z);
                 Bar.Reset();
                 Bar.IsLocked = true;
             }
@@ -136,15 +138,22 @@ public class brickwall : MonoBehaviour {
         }*/
         if (Physics.Raycast(Camera.transform.position, Camera.transform.forward, out hitInfo, 10))
         {            
-            Collider collider = hitInfo.collider;            
+            Collider collider = hitInfo.collider;
             if (collider != LookingObj)
             {
                 if (LookingObj != null)
                 {
                     var particle = LookingObj.GetComponent<ParticleSystem>();
                     if (particle != null) { particle.Stop(); }
+                    if (LookingObj.name == "Brick(Clone)")
+                    {
+                        LookingObj.gameObject.GetComponent<MeshRenderer>().material.mainTexture = brickTex;
+                    }
                 }
                 LookingObj = collider;
+                if (LookingObj.name == "Brick(Clone)") { 
+                    LookingObj.gameObject.GetComponent<MeshRenderer>().material.mainTexture = ballTex;
+                }
                 Bar.Reset();
                 
             }
@@ -159,6 +168,10 @@ public class brickwall : MonoBehaviour {
             {
                 var particle = LookingObj.GetComponent<ParticleSystem>();
                 if (particle != null) { particle.Stop(); }
+                if (LookingObj.name == "Brick(Clone)")
+                {
+                    LookingObj.gameObject.GetComponent<MeshRenderer>().material.mainTexture = brickTex;
+                }
             }
             Bar.Reset();
             if (Mathf.Abs(Camera.transform.forward.x) < 0.1 && (Mathf.Abs(Camera.transform.forward.z) < 0.1) && towerHasBeenTouched && test)
